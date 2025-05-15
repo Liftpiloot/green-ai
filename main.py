@@ -20,9 +20,10 @@ def create_challenges(count=1):
             'Content-Type': 'application/json'
         }
         response = requests.post(url, json=payload, headers=headers)
-
-        return {"message": "Challenge generated successfully", "data": response.json()}
-
+        if response.status_code == 200:
+            return {"message": "Challenge generated successfully", "data": response.json()}
+        else:
+            return {"error": "Failed to generate challenge", "status_code": response.status_code, "response": response.text}
 def get_location_and_info(count):
     # TODO: Implement logic to get location and information based on AI system
     # For now, we will use a static list of locations and information
