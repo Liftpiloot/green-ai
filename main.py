@@ -11,7 +11,8 @@ def create_challenges(count=1):
     get_location_and_info(count)
     for i in range(count):
         place = LOCATIONS[i]
-        url = f"{GEN_API_URL}?location={place[0]}&information={place[1]}"
+        loc = POSTCODES[place[0]]
+        url = f"{GEN_API_URL}?location={loc}&information={place[1]}"
         headers = {
             'Content-Type': 'application/json'
         }
