@@ -7,7 +7,7 @@ app = FastAPI()
 GEN_API_URL = "https://greenaillmapi.onrender.com/GenerateChallenge"
 
 @app.get("/create")
-def create_challenges(count=1):
+def create_challenges(count: int=1):
     get_location_and_info(count)
     for i in range(count):
         place = LOCATIONS[i]
@@ -33,7 +33,7 @@ LOCATIONS=[(5011, "Leefbaarheid = 2/5, Luchtkwaliteit = 2/5, Geluidsoverlast = 4
 
 # Gedeeltelijk Ai generated... Controleer of de buurten correct zijn.
 POSTCODES = {
-    5011: "Postcode 5011, De Schans, Tilburg",
+    5011: "Postcode 5011, Noord, Tilburg",
     5012: "Postcode 5012, Quirijnstok, Tilburg",
     5013: "Postcode 5013, Oude stad/Lovense kanaalzone, Tilburg",
     5014: "Postcode 5014, Groeseind-Hoefstraat, Tilburg",
