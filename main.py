@@ -11,19 +11,17 @@ def create_challenges(count=1):
     get_location_and_info(count)
     for i in range(count):
         place = LOCATIONS[i]
-        url = GEN_API_URL
-        payload = {
-            "location" : place[0],
-            "information": place[1],
-        }
+        url = f"{GEN_API_URL}?location={place[0]}&information={place[1]}"
         headers = {
             'Content-Type': 'application/json'
         }
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             return {"message": "Challenge generated successfully", "data": response.json()}
         else:
-            return {"error": "Failed to generate challenge", "status_code": response.status_code, "response": response.text}
+            return {"error": "Failed to generate challenge", "status_code": response.status_code,
+                    "response": response.text}
+
 def get_location_and_info(count):
     # TODO: Implement logic to get location and information based on AI system
     # For now, we will use a static list of locations and information
