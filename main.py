@@ -21,7 +21,7 @@ def create_challenges(count=1):
         }
         response = requests.post(url, json=payload, headers=headers)
 
-        return response.json()
+        return {"message": "Challenge generated successfully", "data": response.json()}
 
 def get_location_and_info(count):
     # TODO: Implement logic to get location and information based on AI system
