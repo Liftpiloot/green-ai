@@ -1,10 +1,35 @@
-from typing import Optional
-import requests
 from fastapi import FastAPI
+import os
+from google import genai
 
 app = FastAPI()
 
-GEN_API_URL = "https://greenaillmapi.onrender.com/GenerateChallenge"
+AI_API_KEY = os.getenv("GeminiAPI")
+
+@app.get("/check_trashcan")
+async def check_trashcan(image: bytes):
+    if not AI_API_KEY:
+        return {"error": "AI API key not found"}
+    client = genai.Client(api_key=AI_API_KEY)
+    content = f"Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'."
+    response = client.models.generate_content(
+        model="gemini-2.0-flash", contents=[image, content])
+    if response.text == "yes":
+        return {"message": "Trashcan is full"}
+    else:
+        return {"message": "Trashcan is not full"}
+
+
+@app.get("/GenerateChallenge")
+async def generate_challenge(location: str = None, information: str = None):
+    if not AI_API_KEY:
+        return {"error": "AI API key not found"}
+    content = f"Generate a short and actionable challenge for improving the environment (max 20 words) for users near {location}, where {information}. Keep it fun and motivating. examples are, plant a tree, plant a hedge or a flower, etc. Be very exact, the user should know exactly what to do. if talking about a tree, be specific about the type of tree, if talking about a flower, be specific about the type of flower. Do not use any other words than the challenge itself. The locations are public areas. Also state the reason, which metric will it improve"
+    client = genai.Client(api_key=AI_API_KEY)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash", contents=content)
+    # send challenge to greenAi API
+    return {"message": "Challenge generated successfully", "data": response.text}
 
 @app.get("/create")
 def create_challenges(count: int=1):
@@ -12,16 +37,9 @@ def create_challenges(count: int=1):
     for i in range(count):
         place = LOCATIONS[i]
         loc = POSTCODES[place[0]]
-        url = f"{GEN_API_URL}?location={loc}&information={place[1]}"
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            return {"message": "Challenge generated successfully", "data": response.json()}
-        else:
-            return {"error": "Failed to generate challenge", "status_code": response.status_code,
-                    "response": response.text}
+        challenge = generate_challenge(location=loc, information=place[1])
+        # TODO send challenge to greenAi API
+        return {"message": "Challenge generated successfully", "data": challenge}
 
 def get_location_and_info(count):
     # TODO: Implement logic to get location and information based on AI system

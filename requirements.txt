@@ -1,2 +1,3 @@
 fastapi[all]
 requests
+google==3.0.0
