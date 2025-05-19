@@ -1,3 +1,5 @@
 fastapi[all]
 requests
 google==3.0.0
+google-auth==2.40.1
+google-genai==1.14.0
