@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 import os
 from google import genai
 
@@ -6,8 +6,8 @@ app = FastAPI()
 
 AI_API_KEY = os.getenv("GeminiAPI")
 
-@app.get("/check_trashcan")
-async def check_trashcan(image: bytes):
+@app.post("/check_trashcan")
+async def check_trashcan(image: UploadFile = File(...)):
     if not AI_API_KEY:
         return {"error": "AI API key not found"}
     client = genai.Client(api_key=AI_API_KEY)
