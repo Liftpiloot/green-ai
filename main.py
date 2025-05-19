@@ -1,23 +1,44 @@
+import tempfile
+
 from fastapi import FastAPI, UploadFile, File
 import os
 from google import genai
 
 app = FastAPI()
 
+from dotenv import load_dotenv
+load_dotenv()
 AI_API_KEY = os.getenv("GeminiAPI")
 
-@app.post("/check_trashcan")
-async def check_trashcan(image: UploadFile = File(...)):
+@app.post("/trashcan_is_full")
+async def trashcan_is_full(image: UploadFile = File(...)):
     if not AI_API_KEY:
         return {"error": "AI API key not found"}
     client = genai.Client(api_key=AI_API_KEY)
-    content = f"Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'."
+    contents = await image.read()
+
+    # Write to a temporary file (Gemini needs a file path)
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(contents)
+        tmp_path = tmp.name
+
+    uploaded_file = client.files.upload(file=tmp_path)
+
+    caption = "Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'. Do not add any other words. return no if the trashcan is not full. Only return yes if the trashcan is visibly full."
     response = client.models.generate_content(
-        model="gemini-2.0-flash", contents=[image, content])
-    if response.text == "yes":
-        return {"message": "Trashcan is full"}
+        model="gemini-2.0-flash", contents=[uploaded_file, caption])
+    # Clean up the temporary file
+    os.remove(tmp_path)
+    # return true if response contains yes
+    if "yes" in response.text.lower():
+        return {"message": "Trashcan is full", "data": response.text}
+    elif "no" in response.text.lower():
+        return {"message": "Trashcan is not full", "data": response.text}
     else:
-        return {"message": "Trashcan is not full"}
+        return {"message": "Could not determine if the trashcan is full", "data": response.text}
+
+
+
 
 
 @app.get("/GenerateChallenge")
@@ -32,12 +53,12 @@ async def generate_challenge(location: str = None, information: str = None):
     return {"message": "Challenge generated successfully", "data": response.text}
 
 @app.get("/create")
-def create_challenges(count: int=1):
+async def create_challenges(count: int=1):
     get_location_and_info(count)
     for i in range(count):
         place = LOCATIONS[i]
         loc = POSTCODES[place[0]]
-        challenge = generate_challenge(location=loc, information=place[1])
+        challenge = await generate_challenge(location=loc, information=place[1])
         # TODO send challenge to greenAi API
         return {"message": "Challenge generated successfully", "data": challenge}
 
