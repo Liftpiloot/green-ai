@@ -3,8 +3,18 @@ import tempfile
 from fastapi import FastAPI, UploadFile, File
 import os
 from google import genai
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to specific domains in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from dotenv import load_dotenv
 load_dotenv()
