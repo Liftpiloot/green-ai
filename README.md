@@ -1,27 +1,12 @@
-# Deploy FastAPI on Render
+# Green Ai APi
 
-Use this repo as a template to deploy a Python [FastAPI](https://fastapi.tiangolo.com) service on Render.
+De green Ai API is een RESTful API die is ontworpen voor de Green AI applicatie. Deze API biedt een makkelijke manier om challenges te genereren voor de app, op basis van gegevens over de locatie.
+De Challenges kunnen op twee manieren worden gemaakt: 
+- Automatisch, door het AI model met /create 
+- Door de gebruiker met /GenerateChallenge(location,information). 
 
-See https://render.com/docs/deploy-fastapi or follow the steps below:
+Ook bevat de applicatie een endpoint om te controleren of een vuilnisbak vol is.
+- /trashcan_is_full(image) stuurt een afbeelding van de vuilnisbak naar de API, die vervolgens een antwoord terugstuurt met de status van de vuilnisbak.
+Dit is in de huidige versie gedaan met een Gemini API, maar in de toekomst gaan we ons eigen model implementeren, Sem heeft dit model al getraind.
 
-## Manual Steps
-
-1. You may use this repository directly or [create your own repository from this template](https://github.com/render-examples/fastapi/generate) if you'd like to customize the code.
-2. Create a new Web Service on Render.
-3. Specify the URL to your new repository or this repository.
-4. Render will automatically detect that you are deploying a Python service and use `pip` to download the dependencies.
-5. Specify the following as the Start Command.
-
-    ```shell
-    uvicorn main:app --host 0.0.0.0 --port $PORT
-    ```
-
-6. Click Create Web Service.
-
-Or simply click:
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/fastapi)
-
-## Thanks
-
-Thanks to [Harish](https://harishgarg.com) for the [inspiration to create a FastAPI quickstart for Render](https://twitter.com/harishkgarg/status/1435084018677010434) and for some sample code!
+De Api gebruikt Gemini AI om de challenges te genereren, en het eigen AI model, dat is getraind op basis van informatie, te vinden op kaarten van AtlasNatuurlijk kapitaal. De documentatie hiervan is te vinden in het Jupyter notebook.
