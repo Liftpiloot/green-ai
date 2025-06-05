@@ -21,7 +21,7 @@ app.add_middleware(
 
 from ultralytics import YOLO
 
-model = YOLO("runs/detect/train8/weights/best.pt")
+model = YOLO("yolo/best.pt")
 
 @app.post("/trashcan_is_full")
 async def inspect(file: UploadFile = File(...)):
