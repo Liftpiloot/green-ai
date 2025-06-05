@@ -116,7 +116,12 @@ AI_API_KEY = os.getenv("GeminiAPI")
 async def generate_challenge(location: str = None, information: str = None):
     if not AI_API_KEY:
         return {"error": "AI API key not found"}
-    content = f"Generate a short and actionable challenge for improving the environment (max 20 words) for users near {location}, where {information}. Keep it fun and motivating. examples are, plant a tree, plant a hedge or a flower, etc. Be very exact, the user should know exactly what to do. if talking about a tree, be specific about the type of tree, if talking about a flower, be specific about the type  of flower. Do not use any other words than the challenge itself. The locations are public areas. Also state the reason, which metric will it improve"
+    content = (
+        f"Genereer een korte en concrete uitdaging om de omgeving te verbeteren (maximaal 20 woorden) voor gebruikers in de buurt van {location}, waar {information}. Houd het leuk en motiverend. Voorbeelden zijn: plant een boom, plant een haag of een bloem, enzovoort. Wees heel precies, de gebruiker moet exact weten wat te doen. Noem bij een boom het type boom, bij een bloem het type bloem. Gebruik geen andere woorden dan de uitdaging zelf. De locaties zijn openbare ruimtes. Geef ook de reden aan en welke meetwaarde hierdoor verbetert."
+        f"Geef het antwoord als volgt terug:\n"
+        f"Titel: <titel>\n"
+        f"Uitdaging: <uitdaging>"
+    )
     client = genai.Client(api_key=AI_API_KEY)
     print("content: " + content)
     try:
@@ -138,7 +143,7 @@ async def create_challenges(count: int=1):
         if count > len(locations):
             return {"error": "Count exceeds available locations"}
         place = locations[i]
-        challenge = await generate_challenge(location=place[0], information=f"Percentage trees: {place[1]:.1f}%, bushes: {place[2]:.1f}%, grass: {place[3]:.1f}%, Possible improvement in environmental health risk {place[4]:.1f}.")
+        challenge = await generate_challenge(location=place[0], information=f"Percentage bomen: {place[1]:.1f}%, struiken: {place[2]:.1f}%, gras: {place[3]:.1f}%, Mogelijke verbetering in milieugezondheidsrisico {place[4]:.1f}.")
         # TODO send challenge to greenAi API
         if "error" not in challenge:
             challenges.append([challenge, place[4]])
