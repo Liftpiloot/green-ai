@@ -24,8 +24,8 @@ from ultralytics import YOLO
 model = YOLO("yolo/best.pt")
 
 @app.post("/trashcan_is_full")
-async def inspect(file: UploadFile = File(...)):
-    contents = await file.read()
+async def inspect(image: UploadFile = File(...)):
+    contents = await image.read()
     image = Image.open(io.BytesIO(contents))
     results = model(image)
     detections = results[0].boxes
