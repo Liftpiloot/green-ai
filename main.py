@@ -42,10 +42,10 @@ async def inspect(file: UploadFile = File(...)):
 
         objects.append({"class": cls_name, "confidence": conf})
 
-        if cls_name in ["full_trashcan", "ground_trash"] and conf >= 0.65:
+        if cls_name in ["Full Trashcan", "Ground Trash"] and conf >= 0.65:
             found_valid = True
             only_irrelevant = False
-        elif cls_name in ["empty_trashcan", "plant"]:
+        elif cls_name in ["Empty Trashcan", "Plant"]:
             continue
         else:
             only_irrelevant = False  # Onbekende of andere relevante klasse
