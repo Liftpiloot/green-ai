@@ -16,36 +16,87 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from dotenv import load_dotenv
-load_dotenv()
-AI_API_KEY = os.getenv("GeminiAPI")
+
+from ultralytics import YOLO
+
+model = YOLO("runs/detect/train8/weights/best.pt")
 
 @app.post("/trashcan_is_full")
-async def trashcan_is_full(image: UploadFile = File(...)):
-    if not AI_API_KEY:
-        return {"error": "AI API key not found"}
-    client = genai.Client(api_key=AI_API_KEY)
-    contents = await image.read()
+async def inspect(file: UploadFile = File(...)):
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
+    results = model(image)
+    detections = results[0].boxes
+    names = results[0].names
+
+    found_valid = False
+    only_irrelevant = True
+    objects = []
+
+    for box in detections:
+        cls_id = int(box.cls)
+        cls_name = names[cls_id]
+        conf = float(box.conf)
+
+        objects.append({"class": cls_name, "confidence": conf})
+
+        if cls_name in ["full_trashcan", "ground_trash"] and conf >= 0.65:
+            found_valid = True
+            only_irrelevant = False
+        elif cls_name in ["empty_trashcan", "plant"]:
+            continue
+        else:
+            only_irrelevant = False  # Onbekende of andere relevante klasse
+
+    if found_valid:
+        return {
+            "approved": True,
+            "message": "Bedankt voor het doorsturen van het afval. Wij gaan er zo snel mogelijk mee aan de slag.",
+            "objects": objects
+        }
+    elif only_irrelevant:
+        return {
+            "approved": False,
+            "message": "Geen volle vuilnisbak gevonden, probeer het nogmaals.",
+            "objects": objects
+        }
+    else:
+        return {
+            "approved": False,
+            "message": "Afbeelding niet herkend. Probeer het opnieuw met een duidelijkere foto.",
+            "objects": objects
+        }
+
+#from dotenv import load_dotenv
+#load_dotenv()
+#AI_API_KEY = os.getenv("GeminiAPI")
+
+#@app.post("/trashcan_is_full")
+#async def trashcan_is_full(image: UploadFile = File(...)):
+ #   if not AI_API_KEY:
+  #      return {"error": "AI API key not found"}
+   # client = genai.Client(api_key=AI_API_KEY)
+    #contents = await image.read()
 
     # Write to a temporary file (Gemini needs a file path)
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        tmp.write(contents)
-        tmp_path = tmp.name
+    #with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+     #   tmp.write(contents)
+      #  tmp_path = tmp.name
 
-    uploaded_file = client.files.upload(file=tmp_path)
+    #uploaded_file = client.files.upload(file=tmp_path)
 
-    caption = "Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'. Do not add any other words. return no if the trashcan is not full. Only return yes if the trashcan is visibly full."
-    response = client.models.generate_content(
-        model="gemini-2.0-flash", contents=[uploaded_file, caption])
+    #caption = "Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'. Do not add any other words. return no if the trashcan is not full. Only return yes if the trashcan is visibly full."
+    #response = client.models.generate_content(
+     #   model="gemini-2.0-flash", contents=[uploaded_file, caption])
     # Clean up the temporary file
-    os.remove(tmp_path)
+    #os.remove(tmp_path)
     # return true if response contains yes
-    if "yes" in response.text.lower():
-        return {"message": "Trashcan is full", "data": response.text}
-    elif "no" in response.text.lower():
-        return {"message": "Trashcan is not full", "data": response.text}
-    else:
-        return {"message": "Could not determine if the trashcan is full", "data": response.text}
+    #if "yes" in response.text.lower():
+     #   return {"message": "Trashcan is full", "data": response.text}
+    #elif "no" in response.text.lower():
+     #   return {"message": "Trashcan is not full", "data": response.text}
+    #else:
+     #   return {"message": "Could not determine if the trashcan is full", "data": response.text}
 
 
 
