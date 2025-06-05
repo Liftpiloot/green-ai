@@ -4,6 +4,8 @@ from fastapi import FastAPI, UploadFile, File
 import os
 from google import genai
 from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
+import io
 
 
 app = FastAPI()
@@ -67,9 +69,9 @@ async def inspect(file: UploadFile = File(...)):
             "objects": objects
         }
 
-#from dotenv import load_dotenv
-#load_dotenv()
-#AI_API_KEY = os.getenv("GeminiAPI")
+from dotenv import load_dotenv
+load_dotenv()
+AI_API_KEY = os.getenv("GeminiAPI")
 
 #@app.post("/trashcan_is_full")
 #async def trashcan_is_full(image: UploadFile = File(...)):

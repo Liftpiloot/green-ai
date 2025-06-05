@@ -4,3 +4,12 @@ google==3.0.0
 google-auth==2.40.1
 google-genai==1.14.0
 python-dotenv~=1.1.0
+protobuf~=6.31.1
+pillow~=11.1.0
+ultralytics~=8.3.150
+pandas~=2.2.3
+numpy~=2.2.6
+seaborn~=0.13.2
+matplotlib~=3.10.0
+joblib~=1.4.2
+scikit-learn~=1.6.1
