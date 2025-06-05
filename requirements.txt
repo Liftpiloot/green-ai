@@ -13,3 +13,4 @@ seaborn~=0.13.2
 matplotlib~=3.10.0
 joblib~=1.4.2
 scikit-learn~=1.6.1
+uvicorn~=0.34.2

@@ -1,8 +1,13 @@
 import tempfile
 
+import joblib
+import numpy as np
+import pandas as pd
+import uvicorn
 from fastapi import FastAPI, UploadFile, File
 import os
 from google import genai
+import google.genai.errors
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
@@ -18,6 +23,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# rum the app
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
 from ultralytics import YOLO
 
@@ -110,27 +118,81 @@ async def generate_challenge(location: str = None, information: str = None):
         return {"error": "AI API key not found"}
     content = f"Generate a short and actionable challenge for improving the environment (max 20 words) for users near {location}, where {information}. Keep it fun and motivating. examples are, plant a tree, plant a hedge or a flower, etc. Be very exact, the user should know exactly what to do. if talking about a tree, be specific about the type of tree, if talking about a flower, be specific about the type of flower. Do not use any other words than the challenge itself. The locations are public areas. Also state the reason, which metric will it improve"
     client = genai.Client(api_key=AI_API_KEY)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash", contents=content)
-    # send challenge to greenAi API
-    return {"message": "Challenge generated successfully", "data": response.text}
+    print("content: " + content)
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", contents=content)
+        # send challenge to greenAi API
+        return {"message": "Challenge generated successfully", "data": response.text}
+    except:
+        print("Error generating challenge:")
+        return {"error": "Gemini failed to generate challenge, please try again later."}
 
 @app.get("/create")
 async def create_challenges(count: int=1):
-    get_location_and_info(count)
+    print("Creating challenges for count:", count)
+    locations = get_location_and_info(count)
+    print("Locations:", locations)
+    challenges = []
     for i in range(count):
-        place = LOCATIONS[i]
-        loc = POSTCODES[place[0]]
-        challenge = await generate_challenge(location=loc, information=place[1])
+        if count > len(locations):
+            return {"error": "Count exceeds available locations"}
+        place = locations[i]
+        challenge = await generate_challenge(location=place[0], information=f"Percentage trees: {place[1]:.1f}%, bushes: {place[2]:.1f}%, grass: {place[3]:.1f}%, Possible improvement in environmental health risk {place[4]:.1f}.")
         # TODO send challenge to greenAi API
-        return {"message": "Challenge generated successfully", "data": challenge}
+        if "error" not in challenge:
+            challenges.append([challenge, place[4]])
+    return {"message": "Challenges created successfully", "data": challenges}
 
 def get_location_and_info(count):
-    # TODO: Implement logic to get location and information based on AI system
-    # For now, we will use a static list of locations and information
-    pass
+    locations = []
+    if count > len(POSTCODES):
+        print(f"Requested count {count} exceeds available postcodes {len(POSTCODES)}. Adjusting to maximum available.")
+        count = len(POSTCODES)
+    else:
+        print(f"Using count: {count} for available postcodes.")
+    for pc4 in list(POSTCODES.keys())[:count]:
+        row = DF[DF['pc4'] == pc4]
+        if row.empty:
+            print(f"No data for pc4: {pc4}, skipping.")
+            continue
+        improvement = calculate_improvement(pc4)
+        loc = POSTCODES[pc4]
+        info = DF[DF['pc4'] == pc4].iloc[0]
+        locations.append([loc, info['PercentageTrees'], info['PercentageBushes'], info['PercentageGrass'], improvement])
+    return locations
 
-LOCATIONS=[(5011, "Leefbaarheid = 2/5, Luchtkwaliteit = 2/5, Geluidsoverlast = 4/5, struiken = weinig, bomen = veel"), (5012, "Leefbaarheid = 3/5, Luchtkwaliteit = 3/5, Geluidsoverlast = 2/5, struiken = veel, bomen = weinig"), (5013, "Leefbaarheid = 4/5, Luchtkwaliteit = 4/5, Geluidsoverlast = 1/5, struiken = gemiddeld, bomen = gemiddeld")]
+
+DF = pd.read_csv('merged_df.csv')
+SVM_MGR_MODEL = joblib.load('svm_mgr_model.joblib')
+
+def calculate_improvement(pc4):
+    print(f"Calculating improvement for pc4: {pc4}")
+    row = DF[DF['pc4'] == pc4]
+    if row.empty:
+        print(f"No data found for pc4: {pc4}")
+        return None  # or 0, or handle as needed
+    print(f"Row data: {row}")
+    mgr_mean = row['mgr_mean'].values[0]
+    percentage_green = row['PercentageTrees'].values[0]
+    percentage_bushes = row['PercentageBushes'].values[0]
+    percentage_grass = row['PercentageGrass'].values[0]
+
+    # increase the percentages by factor of 10 percent
+    new_percentage_green = min(percentage_green * 1.1, 100)
+    new_percentage_bushes = min(percentage_bushes * 1.1, 100)
+    new_percentage_grass = min(percentage_grass * 1.1, 100)
+
+    # calculate the new mgr_mean based on the new percentages
+    input_features = row.copy()
+    input_features = input_features.drop(columns=['mgr_mean', 'pc4'])
+    input_features['PercentageTrees'] = new_percentage_green
+    input_features['PercentageBushes'] = new_percentage_bushes
+    input_features['PercentageGrass'] = new_percentage_grass
+    new_mgr = SVM_MGR_MODEL.predict(input_features.values)[0]
+    print(f"New MGR: {new_mgr}, Original MGR Mean: {mgr_mean}")
+    improvement = mgr_mean - new_mgr  # Positive if risk decreases
+    return improvement
 
 
 # Gedeeltelijk Ai generated... Controleer of de buurten correct zijn.
