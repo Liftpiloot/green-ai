@@ -1,12 +1,59 @@
-# Green Ai APi
+# Green AI API
 
-De green Ai API is een RESTful API die is ontworpen voor de Green AI applicatie. Deze API biedt een makkelijke manier om challenges te genereren voor de app, op basis van gegevens over de locatie.
-De Challenges kunnen op twee manieren worden gemaakt: 
-- Automatisch, door het AI model met /create 
-- Door de gebruiker met /GenerateChallenge(location,information). 
+De **Green AI API** is een RESTful API ontworpen voor gebruik binnen de Green AI-applicatie. Deze API biedt een eenvoudige manier om op locatie gebaseerde **challenges** te genereren en om te detecteren of een **vuilnisbak vol is** met behulp van AI-modellen.
 
-Ook bevat de applicatie een endpoint om te controleren of een vuilnisbak vol is.
-- /trashcan_is_full(image) stuurt een afbeelding van de vuilnisbak naar de API, die vervolgens een antwoord terugstuurt met de status van de vuilnisbak.
-Dit is in de huidige versie gedaan met een Gemini API, maar in de toekomst gaan we ons eigen model implementeren, Sem heeft dit model al getraind.
+## Functionaliteiten
 
-De Api gebruikt Gemini AI om de challenges te genereren, en het eigen AI model, dat is getraind op basis van informatie, te vinden op kaarten van AtlasNatuurlijk kapitaal. De documentatie hiervan is te vinden in het Jupyter notebook.
+### 🔹 Challenge-generatie
+
+Challenges kunnen op twee manieren worden aangemaakt:
+
+- **Automatisch**: via het AI-model met de endpoint `POST /create`
+- **Handmatig**: via de gebruiker met de endpoint `POST /GenerateChallenge(location, information)`
+
+De gegenereerde challenges zijn afhankelijk van gegevens over de locatie, en worden gegenereerd met behulp van **Gemini AI** en kaarten van **Atlas Natuurlijk Kapitaal**.
+
+### 🔹 Vuilnisbakdetectie
+
+- Endpoint: `POST /trashcan_is_full(image)`
+- Deze endpoint ontvangt een afbeelding van een vuilnisbak en bepaalt met behulp van een getraind **YOLO-model** of de vuilnisbak vol is.
+
+## Technische details
+
+- **Challenge-generatie** maakt gebruik van:
+  - **Gemini AI** (via API key)
+  - **Kaartinformatie** van Atlas Natuurlijk Kapitaal
+- **Vuilnisbakstatus** wordt bepaald met:
+  - Een **getraind YOLO AI-model** op basis van vuilnisbakafbeeldingen
+
+De volledige documentatie van het AI-model en de data is beschikbaar in het bijgeleverde **Jupyter-notebook**.
+
+## Installatie en gebruik
+
+1. Maak een `.env` bestand aan in de hoofdmap met daarin je Gemini API key:
+
+   ```env
+   GeminiAPI=your_api_key
+
+2. Installeer de benodigde Python-pakketten:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+3. Start de API-server met:
+
+   ```bash
+    python main.py
+    ```
+   
+De API is nu beschikbaar op `http://localhost:8000`.
+
+## Gebruik in de Green AI-app
+De Green-AI app gebruikt deze API om:
+- Challenges te genereren op basis van de huidige locatie van de gebruiker.
+- De status van vuilnisbakken te controleren door een foto te maken en deze te uploaden.
+
+### Setup in de app
+1. Host deze API-server op een publieke server
+2. Configureer de URL van de API in de source code van de Green AI-app. onder /lib/constants/api_constants.dart
