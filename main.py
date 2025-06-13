@@ -1,17 +1,12 @@
-import tempfile
-
+import io
+import os
 import joblib
-import numpy as np
 import pandas as pd
 import uvicorn
-from fastapi import FastAPI, UploadFile, File
-import os
-from google import genai
-import google.genai.errors
-from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-import io
-
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from google import genai
 
 app = FastAPI()
 
@@ -80,37 +75,6 @@ async def inspect(image: UploadFile = File(...)):
 from dotenv import load_dotenv
 load_dotenv()
 AI_API_KEY = os.getenv("GeminiAPI")
-
-#@app.post("/trashcan_is_full")
-#async def trashcan_is_full(image: UploadFile = File(...)):
- #   if not AI_API_KEY:
-  #      return {"error": "AI API key not found"}
-   # client = genai.Client(api_key=AI_API_KEY)
-    #contents = await image.read()
-
-    # Write to a temporary file (Gemini needs a file path)
-    #with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-     #   tmp.write(contents)
-      #  tmp_path = tmp.name
-
-    #uploaded_file = client.files.upload(file=tmp_path)
-
-    #caption = "Check if the image contains a full trashcan. If it does, return 'yes', otherwise return 'no'. Do not add any other words. return no if the trashcan is not full. Only return yes if the trashcan is visibly full."
-    #response = client.models.generate_content(
-     #   model="gemini-2.0-flash", contents=[uploaded_file, caption])
-    # Clean up the temporary file
-    #os.remove(tmp_path)
-    # return true if response contains yes
-    #if "yes" in response.text.lower():
-     #   return {"message": "Trashcan is full", "data": response.text}
-    #elif "no" in response.text.lower():
-     #   return {"message": "Trashcan is not full", "data": response.text}
-    #else:
-     #   return {"message": "Could not determine if the trashcan is full", "data": response.text}
-
-
-
-
 
 @app.get("/GenerateChallenge")
 async def generate_challenge(location: str = None, information: str = None):
